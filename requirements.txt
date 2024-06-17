@@ -6,3 +6,4 @@ langchain_community==0.0.38
 langchain==0.1.20
 langchain-groq
 sentence-transformers
+pydf
