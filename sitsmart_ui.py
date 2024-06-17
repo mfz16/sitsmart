@@ -117,7 +117,7 @@ with st.sidebar:
 query = st.text_input("Enter your query:", placeholder="Type your query here...")
 
 if update_button:
-    with os.scandir(path) as it:
+    with os.scandir("documents") as it:
         if not any(it):
             st.warning(" NO documents found Please upload documents first.")
     #if not uploaded_files:
