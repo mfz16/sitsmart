@@ -8,3 +8,4 @@ langchain-groq
 sentence-transformers
 pypdf
 faiss-cpu
+python-dotenv

@@ -1,0 +1,5 @@
+# Ignore environment and secrets files
+.env
+.streamlit/secrets.toml
+# Ignore documents folder if needed
+documents/*
