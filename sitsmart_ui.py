@@ -117,14 +117,17 @@ with st.sidebar:
 query = st.text_input("Enter your query:", placeholder="Type your query here...")
 
 if update_button:
-    if not uploaded_files:
-        st.warning("Please upload documents first.")
-    else:
-        if not os.path.exists("documents"):
-            os.makedirs("documents")
-        docs = data_ingestion(uploaded_files)
-        db = vector_embeddings(docs)
-        st.success("Vector DB Index updated successfully.")
+    with os.scandir(path) as it:
+        if not any(it):
+            st.warning(" NO documents found Please upload documents first.")
+    #if not uploaded_files:
+        #st.warning("Please upload documents first.")
+        else:
+            if not os.path.exists("documents"):
+                os.makedirs("documents")
+            docs = data_ingestion(uploaded_files)
+            db = vector_embeddings(docs)
+            st.success("Vector DB Index updated successfully.")
 
 
 if query:
