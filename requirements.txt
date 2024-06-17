@@ -7,3 +7,4 @@ langchain==0.1.20
 langchain-groq
 sentence-transformers
 pypdf
+faiss-cpu
