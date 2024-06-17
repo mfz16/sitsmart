@@ -23,7 +23,7 @@ client = Groq(
     api_key=os.environ.get("GROQ_API_KEY"),
 )
 
-#embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", cache_folder="d://huggingface_models")
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 prompt_template = """You are an intelligent Question Answer system that can answer questions from the catalog of a chairs, which is provided as the context.
 Answer the question based on the context below, and if the question can't be answered based on the context, say "Hmm, I'm not sure." Don't try to make up an answer.
