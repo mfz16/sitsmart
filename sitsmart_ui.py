@@ -91,12 +91,12 @@ if update_button:
     with os.scandir("documents") as it:
         if not any(it):
             st.warning(" NO documents found Please upload documents first.")
-    else:
-        if not os.path.exists("documents"):
-            os.makedirs("documents")
-        docs = data_ingestion(uploaded_files)
-        db = vector_embeddings(docs)
-        st.success("Vector DB Index updated successfully.")
+        else:
+            if not os.path.exists("documents"):
+                os.makedirs("documents")
+                docs = data_ingestion(uploaded_files)
+                db = vector_embeddings(docs)
+                st.success("Vector DB Index updated successfully.")
 
 if query:
     llm = groq_model()
