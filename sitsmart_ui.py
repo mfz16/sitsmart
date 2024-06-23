@@ -105,7 +105,7 @@ def groq_model():
 
 def get_retrieval_qa(llm, db, query):
     model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
-    compressor = CrossEncoderReranker(model=model, top_n=3)
+    compressor = CrossEncoderReranker(model=model, top_n=5)
     retriever = db.as_retriever(search_kwargs={"k": 10})
     compression_retriever = ContextualCompressionRetriever(
         base_compressor=compressor, base_retriever=retriever
