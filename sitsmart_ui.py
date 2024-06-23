@@ -6,15 +6,14 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 from langchain_community.llms import HuggingFacePipeline
-
 from langchain.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 import torch
 from transformers import pipeline
+from sentence_transformers import CrossEncoder
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -47,7 +46,7 @@ def data_ingestion(uploaded_files):
         docs.extend(text_splitter.split_documents(data))
     return docs
 
-#@st.cache_resource
+@st.cache_resource
 def vector_embeddings(docs):
     with st.sidebar:
         st.write("Embeddings...")
@@ -61,51 +60,21 @@ def groq_model():
     chat_model = ChatGroq(temperature=0, model_name="mixtral-8x7b-32768", api_key=os.environ.get("GROQ_API_KEY"))
     return chat_model
 
-# def gemma_llm_local():
-#         # Define quantization configuration
-#         quantization_config = BitsAndBytesConfig(
-#         load_in_4bit=True,
-#         bnb_4bit_use_double_quant=True,
-#         bnb_4bit_quant_type="nf4",
-#         bnb_4bit_compute_dtype=torch.bfloat16,
-#         )
-
-#         # Define the model path
-#         model_path = "D:\mymodels\gemma-2b-it_local"
-
-
-#         # Load the tokenizer
-#         tokenizer = AutoTokenizer.from_pretrained(
-#         model_path, quantization_config=quantization_config, torch_dtype=torch.float16
-#         )
-
-#         # Load the model
-#         model = AutoModelForCausalLM.from_pretrained(
-#         model_path, quantization_config=quantization_config, torch_dtype=torch.float16
-#         )
-
-#         # Define text generation pipeline
-#         generation_pipeline = pipeline(
-#         "text-generation",
-#         model=model,
-#         tokenizer=tokenizer,
-#         model_kwargs={"torch_dtype": torch.bfloat16},
-#         max_new_tokens=512,
-#         )
-
-#         # Define LLM pipeline
-#         gemma_llm = HuggingFacePipeline(
-#         pipeline=generation_pipeline,
-#         model_kwargs={"temperature": 0.7},
-#         )
-#         return gemma_llm
-
-def get_retrieval_qa(llm, db, query):
-    retriever = db.as_retriever(search_kwargs={"k": 3})
+def get_retrieval_qa(llm, context, query):
     document_chain = create_stuff_documents_chain(llm, PROMPT)
-    retrieval_chain = create_retrieval_chain(retriever, document_chain)
-    response = retrieval_chain.invoke({"input": query})
+    retrieval_chain = create_retrieval_chain(None, document_chain)  # No retriever, direct context use
+    response = retrieval_chain.invoke({"input": query, "context": context})
     return response
+
+@st.cache_resource
+def load_reranker():
+    return CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+
+def rerank_documents(query, docs, reranker):
+    pairs = [[query, doc.page_content] for doc in docs]
+    scores = reranker.predict(pairs)
+    sorted_docs = sorted(zip(scores, docs), key=lambda x: x[0], reverse=True)
+    return [doc for score, doc in sorted_docs]
 
 st.title("Sitsmart Search")
 
@@ -122,32 +91,41 @@ if update_button:
     with os.scandir("documents") as it:
         if not any(it):
             st.warning(" NO documents found Please upload documents first.")
-    #if not uploaded_files:
-        #st.warning("Please upload documents first.")
-        else:
-            if not os.path.exists("documents"):
-                os.makedirs("documents")
-            docs = data_ingestion(uploaded_files)
-            db = vector_embeddings(docs)
-            st.success("Vector DB Index updated successfully.")
-
+    else:
+        if not os.path.exists("documents"):
+            os.makedirs("documents")
+        docs = data_ingestion(uploaded_files)
+        db = vector_embeddings(docs)
+        st.success("Vector DB Index updated successfully.")
 
 if query:
     llm = groq_model()
-    #llm= gemma_llm_local()
     try:
         faiss_index = FAISS.load_local("faiss_index1", embeddings, allow_dangerous_deserialization=True)
     except:
         st.warning("Please upload documents first or refresh db.")
-        faiss_index=None
+        faiss_index = None
+
     if faiss_index:
-        answer = get_retrieval_qa(llm, faiss_index, query)
-        st.write(answer['answer'])
+        # Retrieve initial documents
+        retrieved_docs = faiss_index.similarity_search(query, k=10)
+
+        # Re-rank the retrieved documents
+        reranker = load_reranker()
+        sorted_docs = rerank_documents(query, retrieved_docs, reranker)
+
+        # Use only the top N documents for the final answer
+        top_docs = sorted_docs[:3]
+        context = " ".join([doc.page_content for doc in top_docs])
+
+        # Generate the final answer
+        response = get_retrieval_qa(llm, context, query)
+        st.write(response['answer'])
 
         # Display source documents in a scrollable window
         with st.expander("Source Documents"):
             with st.container():
-                    for ans in answer['context']:
-                        st.write(f"- {ans.metadata['source']}, Page {ans.metadata['page']}")
-                        st.write(ans.page_content)
-                        st.write("---")
+                for doc in top_docs:
+                    st.write(f"- {doc.metadata['source']}, Page {doc.metadata['page']}")
+                    st.write(doc.page_content)
+                    st.write("---")
