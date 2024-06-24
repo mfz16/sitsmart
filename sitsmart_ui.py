@@ -5,7 +5,7 @@ from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
-from langchain_community.llms import HuggingFacePipeline
+#from langchain_community.llms import HuggingFacePipeline
 
 from langchain.prompts import PromptTemplate
 from langchain_groq import ChatGroq
@@ -64,45 +64,6 @@ def vector_embeddings(docs):
 def groq_model():
     chat_model = ChatGroq(temperature=0, model_name="mixtral-8x7b-32768", api_key=os.environ.get("GROQ_API_KEY"))
     return chat_model
-
-# def gemma_llm_local():
-#         # Define quantization configuration
-#         quantization_config = BitsAndBytesConfig(
-#         load_in_4bit=True,
-#         bnb_4bit_use_double_quant=True,
-#         bnb_4bit_quant_type="nf4",
-#         bnb_4bit_compute_dtype=torch.bfloat16,
-#         )
-
-#         # Define the model path
-#         model_path = "D:\mymodels\gemma-2b-it_local"
-
-
-#         # Load the tokenizer
-#         tokenizer = AutoTokenizer.from_pretrained(
-#         model_path, quantization_config=quantization_config, torch_dtype=torch.float16
-#         )
-
-#         # Load the model
-#         model = AutoModelForCausalLM.from_pretrained(
-#         model_path, quantization_config=quantization_config, torch_dtype=torch.float16
-#         )
-
-#         # Define text generation pipeline
-#         generation_pipeline = pipeline(
-#         "text-generation",
-#         model=model,
-#         tokenizer=tokenizer,
-#         model_kwargs={"torch_dtype": torch.bfloat16},
-#         max_new_tokens=512,
-#         )
-
-#         # Define LLM pipeline
-#         gemma_llm = HuggingFacePipeline(
-#         pipeline=generation_pipeline,
-#         model_kwargs={"temperature": 0.7},
-#         )
-#         return gemma_llm
 
 def get_retrieval_qa(llm, db, query):
     model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
