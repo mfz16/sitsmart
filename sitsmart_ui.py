@@ -86,21 +86,8 @@ with st.sidebar:
     update_button = st.button("Update Vector DB Index")
 
 # Main area for query input and results
-#query = st.text_input("Enter your query:", placeholder="Type your query here...")
+query = st.text_input("Enter your query:", placeholder="Type your query here...")
 
-query = st.chat_input("Enter your query:")
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# Add user message to chat history
-st.session_state.messages.append({"role": "user", "content": query})
-# Display user message in chat message container
-with st.chat_message("user"):
-    st.markdown(query)
-with st.chat_message("assistant"):
-    st.markdown(answer)
-# Add assistant response to chat history
-st.session_state.messages.append({"role": "assistant", "content": answer})
 
 if update_button:
     with os.scandir("documents") as it:
