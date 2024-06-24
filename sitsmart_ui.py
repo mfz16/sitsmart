@@ -30,8 +30,9 @@ client = Groq(api_key=api_key)
 
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-prompt_template = """You are an intelligent Question Answer system that can answer questions from the catalog of a chairs, which is provided as the context.
-Answer the question based on the context below, and if the question can't be answered based on the context, say "Hmm, I'm not sure." Don't try to make up an answer.
+prompt_template = """You are an intelligent Question Answer system that can answer questions from the catalog of a chairs from a company named sitsmart,
+which is provided as the context. Answer the question based on the context below, and if the question can't be answered based on the context, 
+say "Hmm, I'm not sure." Don't try to make up an answer.
 Question: {input}
 Context: {context}
 Assistant:"""
@@ -105,8 +106,8 @@ def groq_model():
 
 def get_retrieval_qa(llm, db, query):
     model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
-    compressor = CrossEncoderReranker(model=model, top_n=5)
-    retriever = db.as_retriever(search_kwargs={"k": 10})
+    compressor = CrossEncoderReranker(model=model, top_n=3)
+    retriever = db.as_retriever(search_kwargs={"k": 3})
     compression_retriever = ContextualCompressionRetriever(
         base_compressor=compressor, base_retriever=retriever
     )
