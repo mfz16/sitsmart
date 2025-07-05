@@ -86,7 +86,7 @@ def get_retrieval_qa(llm, db, query):
 # -------------------------------
 
 st.set_page_config(page_title="Sitsmart Chat", layout="wide")
-st.title("🪑 Sitsmart Assistant - Chat with your PDFs")
+st.title("🪑 Sitsmart Assistant - How Can I help?")
 
 # Sidebar for uploading files and updating index
 with st.sidebar:
