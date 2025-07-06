@@ -12,10 +12,10 @@ def render_admin_panel():
     """Render the complete admin panel"""
     with st.sidebar:
         st.markdown('<div class="admin-panel">', unsafe_allow_html=True)
-        st.subheader("🛠️ Admin Controls")
+        st.markdown("### 🛠️ **Admin Controls**")
         
         # Document management
-        st.subheader("📄 Document Management")
+        st.markdown("#### 📄 **Document Management**")
         uploaded_files = st.file_uploader("Upload PDF files", type=["pdf"], accept_multiple_files=True)
         
         if st.button("🔄 Update Product Catalog", use_container_width=True):
@@ -51,7 +51,7 @@ def render_admin_panel():
                 st.warning("No documents found. Please upload PDFs first.")
         
         # Activity stats
-        st.subheader("📊 Activity Overview")
+        st.markdown("#### 📊 **Activity Overview**")
         if "messages" in st.session_state:
             st.metric("Total Conversations", len(st.session_state.messages))
         
@@ -77,7 +77,8 @@ def render_admin_panel():
 
 def render_product_gallery():
     """Render product gallery for testing mappings"""
-    st.subheader("🖼️ Product Gallery")
+    st.markdown("## 🖼️ **Product Gallery**")
+    st.markdown("*Preview and verify product image mappings*")
     
     if os.path.exists("images") and os.listdir("images"):
         product_names = set()
@@ -113,7 +114,8 @@ def render_product_gallery():
                         product_images.append(img_path)
                 
                 if product_images:
-                    st.markdown(f"**Images for {selected_product}:**")
+                    st.markdown(f"### **{selected_product} Gallery**")
+                    st.markdown('<div class="product-grid">', unsafe_allow_html=True)
                     cols = st.columns(min(len(product_images), 3))
                     
                     for idx, img_path in enumerate(product_images):
@@ -122,9 +124,10 @@ def render_product_gallery():
                                 img = Image.open(img_path)
                                 img.thumbnail((200, 200), Image.Resampling.LANCZOS)
                                 st.image(img, caption=f"{selected_product}", width=200)
-                                st.caption(f"File: {os.path.basename(img_path)}")
+                                st.caption(f"📁 {os.path.basename(img_path)}")
                             except Exception as e:
                                 st.error(f"Error loading image: {e}")
+                    st.markdown('</div>', unsafe_allow_html=True)
                 else:
                     st.info(f"No images found for {selected_product}")
         else:
@@ -134,7 +137,8 @@ def render_product_gallery():
 
 def render_image_correction():
     """Render manual image correction interface"""
-    st.subheader("✏️ Manual Image Correction")
+    st.markdown("## ✏️ **Manual Image Correction**")
+    st.markdown("*Fix incorrect product-image associations*")
     
     if os.path.exists("images") and os.listdir("images"):
         all_images = [f for f in os.listdir("images") if f.endswith('.png')]
@@ -232,8 +236,21 @@ def render_diagnostics():
 def render_customer_sidebar():
     """Render customer sidebar"""
     with st.sidebar:
-        st.markdown("### 👋 Welcome, Customer!")
-        st.info("💡 **Tip:** Ask me about chair specifications, pricing, or recommendations!")
+        st.markdown('<div class="admin-panel">', unsafe_allow_html=True)
+        st.markdown("### 🙋🏻‍♀️ **Welcome to SitSmart!**")
+        st.markdown("""
+        **How can I help you today?**
+        
+        ⦿ Browse our chair collection  
+        ⦿ Get pricing information  
+        ⦿ Compare product features  
+        ⦿ View product images  
+        ⦿ Contact our sales team
+        """)
+        
+        st.markdown("---")
+        st.markdown("**💡 Quick Tips:**")
+        st.info("Try asking: 'Show me executive chairs' or 'What's the price of SSC-NMO?'")
         
         if st.button("🚪 Switch User", use_container_width=True):
             st.session_state.authenticated = False

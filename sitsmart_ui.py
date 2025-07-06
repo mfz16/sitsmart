@@ -74,7 +74,7 @@ if prompt := st.chat_input("Ask me about SitSmart chairs, pricing, or recommenda
     # Load model
     llm = groq_model()
     
-    # Load existing embeddings if available
+    # Load existing product database (no auto-creation)
     db = None
     embeddings = get_embeddings()
     
@@ -82,30 +82,26 @@ if prompt := st.chat_input("Ask me about SitSmart chairs, pricing, or recommenda
         try:
             db = FAISS.load_local("faiss_index1", embeddings, allow_dangerous_deserialization=True)
         except Exception as e:
-            st.error(f"Error loading embeddings: {e}")
-    else:
-        # Create embeddings from existing documents if available
-        if os.path.exists("documents") and os.listdir("documents"):
-            with st.spinner("📚 Creating initial embeddings..."):
-                loader = PyPDFDirectoryLoader("documents")
-                data = loader.load()
-                text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-                docs = text_splitter.split_documents(data)
-                db = vector_embeddings(docs, force_refresh=False)
+            st.error(f"Error accessing product database: {e}")
     
     if not db:
-        st.error("❌ Product catalog is not available. Please contact our support team.")
+        st.error("❌ Our product information is currently being updated. Please contact our support team or try again later.")
         st.stop()
     
     # Show assistant thinking with placeholder
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
-        message_placeholder.markdown("🤔 Let me check our catalog...")
+        message_placeholder.markdown("🤔 Searching our product collection...")
         
         try:
-            # Run retrieval QA
-            result = get_retrieval_qa(llm, db, prompt)
-            answer = result['answer']
+            # Search product database
+            with st.status("🔍 Searching product database...", expanded=False) as status:
+                status.write("📖 Analyzing your question...")
+                result = get_retrieval_qa(llm, db, prompt)
+                status.write("🎯 Finding relevant products...")
+                answer = result['answer']
+                status.write("✅ Found information!")
+                status.update(label="✅ Search complete!", state="complete")
             
             # Update with actual answer
             message_placeholder.markdown(answer)
@@ -120,6 +116,6 @@ if prompt := st.chat_input("Ask me about SitSmart chairs, pricing, or recommenda
             display_reference_materials(result, prompt, st.session_state.user_role)
         
         except Exception as e:
-            message_placeholder.markdown("❌ I'm having trouble right now. Please try asking again in a moment.")
+            message_placeholder.markdown("❌ I'm having trouble accessing our product information right now. Please try again in a moment.")
             if st.session_state.user_role == "admin":
-                st.error(f"System Error: {str(e)}")
+                st.error(f"Technical Details: {str(e)}")

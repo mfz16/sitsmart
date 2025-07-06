@@ -43,6 +43,7 @@ def get_document_chain(_llm):
 **Instructions:**
 - Provide specific product details, prices, and features from the context
 - Use bullet points for specifications
+- Always display prices with ₹ symbol (e.g., ₹15,000)
 - If info missing, say "Contact our sales team for details"
 - Be helpful and professional
 
@@ -201,13 +202,23 @@ def vector_embeddings(docs, force_refresh=False):
     
     if not force_refresh and embeddings_exist():
         with st.sidebar:
-            st.info("✅ Using existing product catalog (embeddings found)")
+            st.info("✅ Using existing product database")
         return FAISS.load_local("faiss_index1", embeddings, allow_dangerous_deserialization=True)
     
     with st.sidebar:
-        st.write("📚 Creating new product embeddings...")
+        st.write("📚 Organizing product information...")
     db = FAISS.from_documents(docs, embeddings)
     db.save_local("faiss_index1")
     with st.sidebar:
-        st.success("✅ Product catalog ready!")
+        st.success("✅ Product database ready!")
     return db
+
+def load_existing_database():
+    """Load existing product database if available"""
+    if embeddings_exist():
+        try:
+            embeddings = get_embeddings()
+            return FAISS.load_local("faiss_index1", embeddings, allow_dangerous_deserialization=True)
+        except Exception:
+            return None
+    return None
